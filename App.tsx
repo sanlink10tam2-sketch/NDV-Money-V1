@@ -670,19 +670,21 @@ const App: React.FC = () => {
         return;
       }
 
+      const newUserId = Math.floor(1000 + Math.random() * 9000).toString();
+      
       // Tải ảnh lên ImgBB để tiết kiệm dung lượng Supabase (Egress Quota)
       let idFrontUrl = userData.idFront;
       let idBackUrl = userData.idBack;
 
       if (userData.idFront && userData.idFront.startsWith('data:image')) {
-        idFrontUrl = await uploadToImgBB(userData.idFront, `user_${userData.phone}_id_front_${Date.now()}`);
+        idFrontUrl = await uploadToImgBB(userData.idFront, `MT_${newUserId}_${Date.now()}`);
       }
       if (userData.idBack && userData.idBack.startsWith('data:image')) {
-        idBackUrl = await uploadToImgBB(userData.idBack, `user_${userData.phone}_id_back_${Date.now()}`);
+        idBackUrl = await uploadToImgBB(userData.idBack, `MS_${newUserId}_${Date.now()}`);
       }
 
       const newUser: User = {
-        id: Math.floor(1000 + Math.random() * 9000).toString(), 
+        id: newUserId, 
         phone: userData.phone || '', fullName: userData.fullName || '',
         idNumber: userData.idNumber || '', address: userData.address || '',
         password: userData.password || '', // This will be hashed on the server
@@ -754,8 +756,23 @@ const App: React.FC = () => {
       const response = await fetch(`/api/data?${params.toString()}`, { signal: controller.signal });
       clearTimeout(timeout);
 
-      if (response.ok) {
-        const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[FETCH] HTTP Error ${response.status}:`, errorText);
+        throw new Error(`HTTP Error ${response.status}`);
+      }
+
+      let data;
+      const responseText = await response.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("[FETCH] JSON Parse Error. Raw response:", responseText.substring(0, 500));
+        throw parseError;
+      }
+
+      if (data) {
         lastFullFetch.current = Date.now();
 
         if (data.loans) setLoans(prev => {
@@ -836,7 +853,7 @@ const App: React.FC = () => {
       // Tải chữ ký lên ImgBB
       let signatureUrl = signature;
       if (signature && signature.startsWith('data:image')) {
-        signatureUrl = await uploadToImgBB(signature, `loan_${user.id}_sig_${Date.now()}`);
+        signatureUrl = await uploadToImgBB(signature, `CK_${user.id}_${Date.now()}`);
       }
 
       const now = new Date();
@@ -948,7 +965,7 @@ const App: React.FC = () => {
       // Tải hóa đơn lên ImgBB
       let billUrl = bill;
       if (bill && bill.startsWith('data:image')) {
-        billUrl = await uploadToImgBB(bill, `user_${user.id}_bill_${Date.now()}`);
+        billUrl = await uploadToImgBB(bill, `HANG_${user.id}_${Date.now()}`);
       }
 
       const updatedUser = { ...user, pendingUpgradeRank: targetRank, rankUpgradeBill: billUrl, updatedAt: Date.now() };
@@ -984,10 +1001,11 @@ const App: React.FC = () => {
     lastActionTimestamp.current = Date.now();
     // No global processing for 0ms feel
     try {
-      // Tải biên lai tất toán lên ImgBB
+      // Tải biên lai tất toán/gia hạn lên ImgBB
       let billUrl = bill;
       if (bill && bill.startsWith('data:image')) {
-        billUrl = await uploadToImgBB(bill, `loan_${loanId}_settle_bill_${Date.now()}`);
+        const prefix = settlementType === 'PRINCIPAL' ? 'GH' : 'TT';
+        billUrl = await uploadToImgBB(bill, `${prefix}_${loanId}_${Date.now()}`);
       }
 
       let updatedLoan: LoanRecord | null = null;
@@ -1475,10 +1493,10 @@ const App: React.FC = () => {
         let idBackUrl = userData.idBack;
 
         if (userData.idFront && userData.idFront.startsWith('data:image')) {
-          idFrontUrl = await uploadToImgBB(userData.idFront, `user_${user.phone}_id_front_${Date.now()}`);
+          idFrontUrl = await uploadToImgBB(userData.idFront, `MT_${user.id}_${Date.now()}`);
         }
         if (userData.idBack && userData.idBack.startsWith('data:image')) {
-          idBackUrl = await uploadToImgBB(userData.idBack, `user_${user.phone}_id_back_${Date.now()}`);
+          idBackUrl = await uploadToImgBB(userData.idBack, `MS_${user.id}_${Date.now()}`);
         }
 
         const updatedUser = { 

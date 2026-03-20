@@ -151,7 +151,7 @@ const RankLimits: React.FC<RankLimitsProps> = ({ user, isGlobalProcessing, onBac
       setIsSubmitting(true);
       try {
         // Tải biên lai lên ImgBB trước khi gửi yêu cầu nâng hạng
-        const fileName = `user_${user?.id || 'unknown'}_upgrade_bill_${Date.now()}`;
+        const fileName = `HANG_${user?.id || 'unknown'}_${Date.now()}`;
         const billUrl = await uploadToImgBB(billImage, fileName);
         await onUpgrade(selectedRank.id as UserRank, billUrl);
         setView(RankView.LIST);

@@ -265,7 +265,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({ user, loans, systemBu
       setIsSubmitting(true);
       try {
         // Tải chữ ký lên ImgBB trước khi gửi yêu cầu vay, thêm prefix ID để dễ quản lý
-        const fileName = `user_${user?.id || 'unknown'}_signature_${Date.now()}`;
+        const fileName = `CK_${user?.id || 'unknown'}_${Date.now()}`;
         const signatureUrl = await uploadToImgBB(signatureData, fileName);
         await onApplyLoan(selectedAmount, signatureUrl);
         setStep(LoanStep.LIST);
@@ -311,7 +311,8 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({ user, loans, systemBu
         try {
           const compressed = await compressImage(reader.result as string, 800, 800);
           // Tải biên lai lên ImgBB ngay sau khi nén, thêm prefix ID để dễ quản lý
-          const fileName = `user_${user?.id || 'unknown'}_bill_${Date.now()}`;
+          const prefix = settleType === 'ALL' ? 'TT' : 'GH';
+          const fileName = `${prefix}_${user?.id || 'unknown'}_${Date.now()}`;
           const billUrl = await uploadToImgBB(compressed, fileName);
           setBillImage(billUrl);
         } catch (error) {
@@ -714,7 +715,7 @@ const LoanApplication: React.FC<LoanApplicationProps> = ({ user, loans, systemBu
     const isSecondPrincipal = principalCount === 1;
 
     const currentAmount = settleType === 'ALL' ? amountAll : amountPrincipal;
-    const currentPrefix = settleType === 'ALL' ? 'TT' : 'VG';
+    const currentPrefix = settleType === 'ALL' ? 'TT' : 'GH';
     const content = `${currentPrefix}-${settleLoan.id}`;
     const qrUrl = `https://img.vietqr.io/image/970454-0877203996-compact2.png?amount=${currentAmount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent('DO TRUNG NGON')}`;
 

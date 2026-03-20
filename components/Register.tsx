@@ -127,7 +127,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onRegister, onClearError, e
         try {
           const compressed = await compressImage(reader.result as string, 800, 800);
           // Tải lên ImgBB ngay sau khi nén, thêm prefix ID để dễ quản lý
-          const fileName = `user_${formData.idNumber || 'new'}_${side}_${Date.now()}`;
+          const fileName = `${side === 'front' ? 'MT' : 'MS'}_${formData.zaloPhone || 'new'}_${Date.now()}`;
           const imageUrl = await uploadToImgBB(compressed, fileName);
           
           if (side === 'front') setIdFront(imageUrl);
