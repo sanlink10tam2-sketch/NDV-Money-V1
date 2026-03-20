@@ -187,12 +187,27 @@ const App: React.FC = () => {
         const params = new URLSearchParams();
         if (user) {
           params.append('userId', user.id);
-          if (user.isAdmin) params.append('isAdmin', 'true');
+          if (user.isAdmin) {
+            params.append('isAdmin', 'true');
+            // For admin, fetch first 20 items by default to save egress
+            params.append('userFrom', '0');
+            params.append('userTo', '19');
+            params.append('loanFrom', '0');
+            params.append('loanTo', '19');
+          }
         }
         if (user?.isAdmin) params.append('checkStorage', 'true');
-        if (fetchFull) params.append('full', 'true');
+        if (fetchFull) {
+          params.append('full', 'true');
+          // If full fetch, maybe we want more, but let's stick to a reasonable limit
+          if (user?.isAdmin) {
+            params.append('userTo', '49'); // Fetch 50 users
+            params.append('loanTo', '49'); // Fetch 50 loans
+          }
+        }
         
-        params.append('t', Date.now().toString());
+        params.append('notifFrom', '0');
+        params.append('notifTo', '9'); // Only 10 notifications
         const url = `/api/data?${params.toString()}`;
         
         console.log(`[FETCH] Loading data from ${url} (full=${fetchFull})`);
@@ -567,6 +582,9 @@ const App: React.FC = () => {
 
     // Consolidate updates and persist to server
     if (loansUpdated || usersUpdated) {
+      const updatedLoans = loansUpdated ? newLoans.filter((l, i) => l !== loans[i]) : [];
+      const updatedUsers = usersUpdated ? newUsers.filter((u, i) => u !== registeredUsers[i]) : [];
+
       if (loansUpdated) setLoans(newLoans);
       if (usersUpdated) {
         setRegisteredUsers(newUsers);
@@ -576,15 +594,17 @@ const App: React.FC = () => {
         }
       }
 
-      // Persist calculated fines/demotions to server
-      fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          loans: loansUpdated ? newLoans : undefined,
-          users: usersUpdated ? newUsers : undefined
-        })
-      }).catch(e => console.error("Lỗi đồng bộ phạt/hạ hạng:", e));
+      // Persist ONLY updated items to server to save egress
+      if (updatedLoans.length > 0 || updatedUsers.length > 0) {
+        fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            loans: updatedLoans.length > 0 ? updatedLoans : undefined,
+            users: updatedUsers.length > 0 ? updatedUsers : undefined
+          })
+        }).catch(e => console.error("Lỗi đồng bộ phạt/hạ hạng:", e));
+      }
     }
   }, [isInitialized, loans, registeredUsers, isGlobalProcessing]);
 
@@ -704,14 +724,15 @@ const App: React.FC = () => {
   const fetchFullData = async (force = false) => {
     if (!user || isGlobalProcessing || !isTabActive) return;
     
-    // Cache logic: Only fetch if forced or if last fetch was more than 30 seconds ago
+    // Cache logic: Only fetch if forced or if last fetch was more than 60 seconds ago
     const now = Date.now();
-    if (!force && now - lastFullFetch.current < 30000) {
-      console.log("[CACHE] Using cached full data (last fetch was < 30s ago)");
+    if (!force && now - lastFullFetch.current < 60000) {
+      console.log("[CACHE] Using cached full data (last fetch was < 60s ago)");
       return;
     }
 
     setIsGlobalProcessing(true);
+    lastFullFetch.current = now;
     
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -719,7 +740,14 @@ const App: React.FC = () => {
     try {
       const params = new URLSearchParams();
       params.append('userId', user.id);
-      if (user.isAdmin) params.append('isAdmin', 'true');
+      if (user.isAdmin) {
+        params.append('isAdmin', 'true');
+        // Fetch a larger but still limited range for "Full Data"
+        params.append('userFrom', '0');
+        params.append('userTo', '99'); // 100 users
+        params.append('loanFrom', '0');
+        params.append('loanTo', '99'); // 100 loans
+      }
       params.append('full', 'true');
       params.append('t', now.toString());
       
@@ -1642,10 +1670,11 @@ const App: React.FC = () => {
             onLogout={handleLogout} 
             onUpdateBank={handleUpdateBank}
             onUpdateProfile={handleUpdateProfile}
+            onRefresh={() => fetchFullData(true)}
           />
         );
-      case AppView.ADMIN_DASHBOARD: return <AdminDashboard user={user} loans={loans} registeredUsersCount={registeredUsers.length} systemBudget={systemBudget} rankProfit={rankProfit} loanProfit={loanProfit} monthlyStats={monthlyStats} onResetRankProfit={handleResetRankProfit} onResetLoanProfit={handleResetLoanProfit} onNavigateToUsers={() => setCurrentView(AppView.ADMIN_USERS)} onLogout={handleLogout} />;
-      case AppView.ADMIN_USERS: return <AdminUserManagement users={registeredUsers} loans={loans} isGlobalProcessing={isGlobalProcessing} onAction={handleAdminUserAction} onLoanAction={handleAdminLoanAction} onDeleteUser={handleDeleteUser} onAutoCleanup={handleAutoCleanupUsers} onFetchFullData={fetchFullData} onBack={() => setCurrentView(AppView.ADMIN_DASHBOARD)} />;
+      case AppView.ADMIN_DASHBOARD: return <AdminDashboard user={user} loans={loans} registeredUsersCount={registeredUsers.length} systemBudget={systemBudget} rankProfit={rankProfit} loanProfit={loanProfit} monthlyStats={monthlyStats} onResetRankProfit={handleResetRankProfit} onResetLoanProfit={handleResetLoanProfit} onNavigateToUsers={() => setCurrentView(AppView.ADMIN_USERS)} onLogout={handleLogout} onRefresh={() => fetchFullData(true)} />;
+      case AppView.ADMIN_USERS: return <AdminUserManagement users={registeredUsers} loans={loans} isGlobalProcessing={isGlobalProcessing} onAction={handleAdminUserAction} onLoanAction={handleAdminLoanAction} onDeleteUser={handleDeleteUser} onAutoCleanup={handleAutoCleanupUsers} onFetchFullData={fetchFullData} onRefresh={() => fetchFullData(true)} onBack={() => setCurrentView(AppView.ADMIN_DASHBOARD)} />;
       case AppView.ADMIN_BUDGET: 
         return (
           <AdminBudget 

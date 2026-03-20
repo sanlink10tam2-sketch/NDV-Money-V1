@@ -51,6 +51,7 @@ interface AdminUserManagementProps {
   onDeleteUser: (userId: string) => void;
   onAutoCleanup: () => Promise<number>;
   onFetchFullData?: () => Promise<void>;
+  onRefresh?: () => void;
   onBack: () => void;
 }
 
@@ -102,7 +103,7 @@ const BANK_BINS: Record<string, string> = {
   "VRB": "970421"
 };
 
-const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ users, loans, isGlobalProcessing, onAction, onLoanAction, onDeleteUser, onAutoCleanup, onFetchFullData, onBack }) => {
+const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ users, loans, isGlobalProcessing, onAction, onLoanAction, onDeleteUser, onAutoCleanup, onFetchFullData, onRefresh, onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<Record<string, 'INFO' | 'LOANS'>>({});
@@ -246,6 +247,16 @@ const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ users, loans,
             <ChevronLeft size={18} />
           </button>
           <h1 className="text-xl font-black text-white uppercase tracking-tighter">QUẢN LÝ KHÁCH HÀNG</h1>
+          {onRefresh && (
+            <button 
+              onClick={onRefresh}
+              disabled={isGlobalProcessing}
+              className={`p-2 rounded-xl bg-white/5 text-gray-400 hover:text-white transition-colors ${isGlobalProcessing ? 'animate-spin opacity-50' : ''}`}
+              title="Làm mới dữ liệu"
+            >
+              <RefreshCcw size={18} />
+            </button>
+          )}
         </div>
         <div className="flex gap-2">
           {onFetchFullData && (

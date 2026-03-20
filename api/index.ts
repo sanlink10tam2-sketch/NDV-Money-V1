@@ -287,9 +287,12 @@ router.get("/data", async (req, res) => {
     const userId = req.query.userId as string;
     const isAdmin = req.query.isAdmin === 'true';
 
-    // Individual query functions with role-based filtering
+    // Individual query functions with role-based filtering and pagination
     const fetchUsers = async () => {
       try {
+        const from = parseInt(req.query.userFrom as string) || 0;
+        const to = parseInt(req.query.userTo as string) || (req.query.full === 'true' ? 999 : 19);
+
         // Security: Only fetch full columns if explicitly requested (e.g. for profile or admin edit)
         // AND ensure password is NEVER included in data fetch
         const columns = (req.query.full === 'true' ? USER_COLUMNS : USER_SUMMARY_COLUMNS)
@@ -302,6 +305,9 @@ router.get("/data", async (req, res) => {
         if (!isAdmin) {
           if (!userId) return [];
           query = query.eq('id', userId);
+        } else {
+          // Pagination for admin
+          query = query.order('id', { ascending: true }).range(from, to);
         }
         
         const { data, error } = await query;
@@ -315,10 +321,16 @@ router.get("/data", async (req, res) => {
 
     const fetchLoans = async () => {
       try {
+        const from = parseInt(req.query.loanFrom as string) || 0;
+        const to = parseInt(req.query.loanTo as string) || (req.query.full === 'true' ? 999 : 19);
+
         const columns = req.query.full === 'true' ? LOAN_COLUMNS.join(',') : LOAN_SUMMARY_COLUMNS.join(',');
         let query = client.from('loans').select(columns);
         if (!isAdmin && userId) {
           query = query.eq('userId', userId);
+        } else if (isAdmin) {
+          // Pagination for admin
+          query = query.order('id', { ascending: false }).range(from, to);
         }
         const { data, error } = await query;
         if (error) throw error;
@@ -331,11 +343,15 @@ router.get("/data", async (req, res) => {
 
     const fetchNotifications = async () => {
       try {
-        let query = client.from('notifications').select('*').order('id', { ascending: false });
+        const from = parseInt(req.query.notifFrom as string) || 0;
+        const to = parseInt(req.query.notifTo as string) || 19;
+
+        const columns = req.query.full === 'true' ? NOTIFICATION_COLUMNS.join(',') : NOTIFICATION_SUMMARY_COLUMNS.join(',');
+        let query = client.from('notifications').select(columns).order('id', { ascending: false });
         if (!isAdmin && userId) {
           query = query.eq('userId', userId);
         }
-        const { data, error } = await query.limit(100);
+        const { data, error } = await query.range(from, to);
         if (error) throw error;
         return data || [];
       } catch (e: any) {
@@ -346,7 +362,7 @@ router.get("/data", async (req, res) => {
 
     const fetchConfig = async () => {
       try {
-        const { data, error } = await client.from('config').select('*');
+        const { data, error } = await client.from('config').select('key, value');
         if (error) throw error;
         return data || [];
       } catch (e: any) {
@@ -680,6 +696,10 @@ const LOAN_SUMMARY_COLUMNS = [
 
 const NOTIFICATION_COLUMNS = [
   'id', 'userId', 'title', 'message', 'time', 'read', 'type'
+];
+
+const NOTIFICATION_SUMMARY_COLUMNS = [
+  'id', 'userId', 'title', 'time', 'read', 'type'
 ];
 
 router.post("/sync", async (req, res) => {
