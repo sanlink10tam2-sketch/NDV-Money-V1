@@ -125,10 +125,18 @@ const AdminSystem: React.FC<AdminSystemProps> = ({ onReset, onImportSuccess, onB
   return (
     <div className="w-full bg-black px-5 pb-24 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex items-center gap-3 pt-8 mb-6 px-1">
+      <div className="flex items-center justify-between pt-8 mb-6 px-1">
         <h1 className="text-xl font-black text-white uppercase tracking-tighter leading-none">
           CÀI ĐẶT HỆ THỐNG
         </h1>
+        <button 
+          onClick={handleMigrate}
+          disabled={isMigrating}
+          className="bg-blue-600/10 border border-blue-500/20 text-blue-500 font-black px-3 py-2 rounded-xl text-[8px] uppercase tracking-widest hover:bg-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+        >
+          {isMigrating ? <Loader2 className="animate-spin" size={12} /> : <Database size={12} />}
+          KIỂM TRA DB
+        </button>
       </div>
 
       {/* Data Management Section */}
@@ -204,29 +212,6 @@ const AdminSystem: React.FC<AdminSystemProps> = ({ onReset, onImportSuccess, onB
           >
             <RefreshCw size={14} />
             Thực thi Reset toàn bộ
-          </button>
-        </div>
-      </div>
-
-      {/* Rules Configuration Section */}
-      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 space-y-6">
-        <div className="flex items-center gap-2.5">
-          <Settings className="text-blue-500" size={18} />
-          <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Cấu hình quy định</h4>
-        </div>
-
-        <div className="p-3 space-y-4">
-          <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest leading-relaxed italic text-center">
-            Tính năng cấu hình lãi suất, ngày trả cố định, API Zalo... đang được phát triển trong phiên bản tiếp theo.
-          </p>
-          
-          <button 
-            onClick={handleMigrate}
-            disabled={isMigrating}
-            className="w-full bg-blue-600/10 border border-blue-500/20 text-blue-500 font-black py-3 rounded-xl text-[8px] uppercase tracking-widest hover:bg-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            {isMigrating ? <Loader2 className="animate-spin" size={14} /> : <Database size={14} />}
-            Kiểm tra & Cập nhật cấu trúc DB
           </button>
         </div>
       </div>

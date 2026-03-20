@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, UserRank, LoanRecord, Notification } from '../types';
-import { TrendingUp, CreditCard, History, FileText, CalendarDays, Star, Activity, AlertCircle, ChevronRight, Eye, Bell } from 'lucide-react';
+import { TrendingUp, CreditCard, History, FileText, CalendarDays, Star, Activity, AlertCircle, ChevronRight, Eye, Bell, RefreshCcw } from 'lucide-react';
 import NotificationModal from './NotificationModal';
 
 interface DashboardProps {
@@ -16,6 +16,7 @@ interface DashboardProps {
   onViewContract?: (loan: LoanRecord) => void;
   onMarkNotificationRead?: (id: string) => void;
   onMarkAllNotificationsRead?: () => void;
+  onRefresh?: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -29,7 +30,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSettleLoan, 
   onViewContract,
   onMarkNotificationRead,
-  onMarkAllNotificationsRead
+  onMarkAllNotificationsRead,
+  onRefresh
 }) => {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -121,20 +123,22 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="w-6 h-6 bg-[#ff8c00] rounded-lg flex items-center justify-center font-black text-black text-[8px]">NDV</div>
           <h1 className="text-sm font-black text-white tracking-widest uppercase">Money</h1>
         </div>
-        <button 
-          onClick={() => {
-            setShowNotifications(true);
-            onMarkAllNotificationsRead?.();
-          }}
-          className="w-8 h-8 bg-[#111111] border border-white/5 rounded-full flex items-center justify-center text-gray-400 relative active:scale-90 transition-all"
-        >
-          <Bell size={16} />
-          {unreadCount > 0 && (
-            <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-600 rounded-full border-2 border-black flex items-center justify-center">
-              <span className="text-[7px] font-black text-white">{unreadCount}</span>
-            </div>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => {
+              setShowNotifications(true);
+              onMarkAllNotificationsRead?.();
+            }}
+            className="w-8 h-8 bg-[#111111] border border-white/5 rounded-full flex items-center justify-center text-gray-400 relative active:scale-90 transition-all"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-600 rounded-full border-2 border-black flex items-center justify-center">
+                <span className="text-[7px] font-black text-white">{unreadCount}</span>
+              </div>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className={`w-full ${rankInfo.color} rounded-3xl p-5 ${rankInfo.textColor} relative overflow-hidden shadow-2xl`}>

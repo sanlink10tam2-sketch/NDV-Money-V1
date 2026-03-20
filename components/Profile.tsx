@@ -68,20 +68,9 @@ const Profile: React.FC<ProfileProps> = ({ user, onBack, onLogout, onUpdateBank,
             <h1 className="text-base font-black text-white tracking-widest uppercase">Money</h1>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {onRefresh && (
-            <button 
-              onClick={onRefresh}
-              className="text-gray-500 hover:text-white transition-colors"
-              title="Làm mới dữ liệu"
-            >
-              <RefreshCcw size={18} />
-            </button>
-          )}
-          <button onClick={onLogout} className="text-gray-500 hover:text-white transition-colors">
-            <LogOut size={18} />
-          </button>
-        </div>
+        <button onClick={onLogout} className="text-gray-500 hover:text-white transition-colors">
+          <LogOut size={18} />
+        </button>
       </div>
 
       {/* Avatar Section */}

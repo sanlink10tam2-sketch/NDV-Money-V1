@@ -11,7 +11,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminUserManagement from './components/AdminUserManagement';
 import AdminBudget from './components/AdminBudget';
 import AdminSystem from './components/AdminSystem';
-import { User as UserIcon, Home, Briefcase, Medal, LayoutGrid, Users, Wallet, AlertTriangle, X, Database, Settings } from 'lucide-react';
+import { User as UserIcon, Home, Briefcase, Medal, LayoutGrid, Users, Wallet, AlertTriangle, X, Database, Settings, RefreshCcw } from 'lucide-react';
 import { compressImage, generateContractId, uploadToImgBB } from './utils';
 import BankUpdateWarning from './components/BankUpdateWarning';
 import DatabaseErrorModal from './components/DatabaseErrorModal';
@@ -1641,6 +1641,7 @@ const App: React.FC = () => {
                 });
               }
             }}
+            onRefresh={() => fetchFullData(true)}
           />
         );
       case AppView.APPLY_LOAN: 
@@ -1765,6 +1766,7 @@ const App: React.FC = () => {
                 });
               }
             }}
+            onRefresh={() => fetchFullData(true)}
           />
         );
     }
@@ -1844,6 +1846,14 @@ const App: React.FC = () => {
                 </button>
                 <button onClick={() => setCurrentView(AppView.ADMIN_BUDGET)} className={`flex flex-col items-center gap-1 flex-1 ${currentView === AppView.ADMIN_BUDGET ? 'text-[#ff8c00]' : 'text-gray-500'}`}><Wallet size={22} /><span className="text-[7px] font-black uppercase tracking-widest">Ngân sách</span></button>
                 <button onClick={() => setCurrentView(AppView.ADMIN_SYSTEM)} className={`flex flex-col items-center gap-1 flex-1 ${currentView === AppView.ADMIN_SYSTEM ? 'text-[#ff8c00]' : 'text-gray-500'}`}><Settings size={22} /><span className="text-[7px] font-black uppercase tracking-widest">Hệ thống</span></button>
+                <button 
+                  onClick={() => fetchFullData(true)} 
+                  disabled={isGlobalProcessing}
+                  className="flex flex-col items-center gap-1 flex-1 text-gray-500 hover:text-white transition-all"
+                >
+                  <RefreshCcw size={22} className={isGlobalProcessing ? 'animate-spin' : ''} />
+                  <span className="text-[7px] font-black uppercase tracking-widest">Cập nhật</span>
+                </button>
               </>
             ) : (
               <>
@@ -1899,6 +1909,14 @@ const App: React.FC = () => {
                 >
                   <UserIcon size={22} />
                   <span className="text-[7px] font-black uppercase tracking-widest">Cá nhân</span>
+                </button>
+                <button 
+                  onClick={() => fetchFullData(true)} 
+                  disabled={isGlobalProcessing}
+                  className="flex flex-col items-center gap-1 flex-1 text-gray-500 hover:text-white transition-all"
+                >
+                  <RefreshCcw size={22} className={isGlobalProcessing ? 'animate-spin' : ''} />
+                  <span className="text-[7px] font-black uppercase tracking-widest">Cập nhật</span>
                 </button>
               </>
             )}

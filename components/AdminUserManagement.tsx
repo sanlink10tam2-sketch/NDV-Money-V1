@@ -247,28 +247,8 @@ const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ users, loans,
             <ChevronLeft size={18} />
           </button>
           <h1 className="text-xl font-black text-white uppercase tracking-tighter">QUẢN LÝ KHÁCH HÀNG</h1>
-          {onRefresh && (
-            <button 
-              onClick={onRefresh}
-              disabled={isGlobalProcessing}
-              className={`p-2 rounded-xl bg-white/5 text-gray-400 hover:text-white transition-colors ${isGlobalProcessing ? 'animate-spin opacity-50' : ''}`}
-              title="Làm mới dữ liệu"
-            >
-              <RefreshCcw size={18} />
-            </button>
-          )}
         </div>
         <div className="flex gap-2">
-          {onFetchFullData && (
-            <button 
-              onClick={() => onFetchFullData()}
-              disabled={isGlobalProcessing}
-              className={`bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-1.5 hover:bg-white/10 transition-colors active:scale-95 ${isGlobalProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-               <RefreshCcw size={12} className={`text-blue-500 ${isGlobalProcessing ? 'animate-spin' : ''}`} />
-               <span className="text-[8px] font-black text-white uppercase tracking-widest">Làm mới</span>
-            </button>
-          )}
           <button 
             onClick={() => setShowCleanupConfirm(true)}
             className="bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-1.5 hover:bg-white/10 transition-colors active:scale-95"

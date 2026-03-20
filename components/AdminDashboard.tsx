@@ -171,15 +171,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
 
-          {onRefresh && (
-            <button 
-              onClick={onRefresh}
-              className="w-9 h-9 bg-white/5 border border-white/5 rounded-xl flex items-center justify-center text-gray-500 hover:text-white transition-all active:scale-90 mr-2"
-              title="Làm mới dữ liệu"
-            >
-              <RefreshCcw size={18} />
-            </button>
-          )}
           <button onClick={onLogout} className="w-9 h-9 bg-white/5 border border-white/5 rounded-xl flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-90">
             <LogOut size={18} />
           </button>
