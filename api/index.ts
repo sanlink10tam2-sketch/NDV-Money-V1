@@ -193,6 +193,23 @@ const autoCleanupStorage = async () => {
   }
 };
 
+// Keep-Alive function to prevent Supabase from pausing
+export const keepAliveSupabase = async () => {
+  const client = initSupabase();
+  if (!client) return;
+  try {
+    console.log("[Keep-Alive] Pinging Supabase to prevent project pausing...");
+    // Perform a simple query to keep the project active
+    const { error } = await client.from('users').select('id').limit(1);
+    if (error) throw error;
+    console.log("[Keep-Alive] Supabase ping successful.");
+    return true;
+  } catch (e: any) {
+    console.error("[Keep-Alive] Supabase ping failed:", e.message || e);
+    return false;
+  }
+};
+
 // Supabase Status check for Admin
 router.get("/supabase-status", async (req, res) => {
   try {
@@ -219,6 +236,16 @@ router.get("/supabase-status", async (req, res) => {
   } catch (e: any) {
     console.error("Critical error in /supabase-status:", e);
     res.json({ connected: false, error: `Lỗi hệ thống: ${e.message}` });
+  }
+});
+
+// Keep-Alive endpoint for external services
+router.get("/keep-alive", async (req, res) => {
+  const success = await keepAliveSupabase();
+  if (success) {
+    res.json({ status: "ok", message: "Supabase keep-alive successful", timestamp: new Date().toISOString() });
+  } else {
+    res.status(500).json({ status: "error", message: "Supabase keep-alive failed" });
   }
 });
 
