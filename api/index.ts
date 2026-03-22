@@ -245,15 +245,18 @@ router.get("/supabase-status", async (req, res) => {
 
 // Keep-Alive endpoint for external services
 router.get("/keep-alive", async (req, res) => {
+  console.log(`[KEEP-ALIVE] Received ping at ${new Date().toISOString()} from ${req.ip}`);
   const success = await keepAliveSupabase();
   if (success) {
     const timestamp = new Date().toISOString();
     const io = req.app.get("io");
     if (io) {
+      console.log(`[KEEP-ALIVE] Emitting supabase_ping to admin room`);
       io.to("admin").emit("supabase_ping", { timestamp });
     }
     res.json({ status: "ok", message: "Supabase keep-alive successful", timestamp });
   } else {
+    console.error(`[KEEP-ALIVE] Supabase keep-alive failed`);
     res.status(500).json({ status: "error", message: "Supabase keep-alive failed" });
   }
 });
@@ -899,6 +902,13 @@ router.post("/migrate", async (req, res) => {
       });
     }
     
+    const { error: configError } = await client.from('config').select('key').limit(1);
+    if (configError && configError.code === 'PGRST116') {
+      // Table might exist but is empty, that's fine
+    } else if (configError) {
+      console.warn("[Migration] Config table check error:", configError);
+    }
+
     res.json({ success: true, message: "Cấu trúc cơ sở dữ liệu đã chính xác." });
   } catch (e: any) {
     console.error("Lỗi trong /api/migrate:", e);

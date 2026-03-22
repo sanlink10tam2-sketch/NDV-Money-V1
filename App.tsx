@@ -211,6 +211,7 @@ const App: React.FC = () => {
         
         params.append('notifFrom', '0');
         params.append('notifTo', '9'); // Only 10 notifications
+        params.append('t', Date.now().toString()); // Cache buster
         const url = `/api/data?${params.toString()}`;
         
         console.log(`[FETCH] Loading data from ${url} (full=${fetchFull})`);
