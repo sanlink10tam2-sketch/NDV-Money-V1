@@ -247,6 +247,8 @@ router.get("/supabase-status", async (req, res) => {
 
 // Keep-Alive endpoint for external services
 router.get("/keep-alive", async (req, res) => {
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+  console.log(`[Keep-Alive] Received ping request from: ${userAgent}`);
   const success = await keepAliveSupabase();
   if (success) {
     res.json({ status: "ok", message: "Supabase keep-alive successful", timestamp: new Date().toISOString() });

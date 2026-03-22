@@ -284,6 +284,10 @@ const App: React.FC = () => {
           setMonthlyStats(slicedStats);
           localStorage.setItem('ndv_monthly_stats', JSON.stringify(slicedStats));
         }
+        if (data.lastKeepAlive) {
+          setLastKeepAlive(data.lastKeepAlive);
+          localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
+        }
         if (data.storageFull !== undefined) setStorageFull(data.storageFull);
         if (data.storageUsage !== undefined) setStorageUsage(data.storageUsage);
 
