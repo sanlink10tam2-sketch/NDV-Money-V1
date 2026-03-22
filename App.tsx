@@ -284,9 +284,9 @@ const App: React.FC = () => {
           setMonthlyStats(slicedStats);
           localStorage.setItem('ndv_monthly_stats', JSON.stringify(slicedStats));
         }
-        if (data.lastKeepAlive) {
+        if (data.lastKeepAlive !== undefined) {
           setLastKeepAlive(data.lastKeepAlive);
-          localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
+          if (data.lastKeepAlive) localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
         }
         if (data.storageFull !== undefined) setStorageFull(data.storageFull);
         if (data.storageUsage !== undefined) setStorageUsage(data.storageUsage);
@@ -415,6 +415,10 @@ const App: React.FC = () => {
           setMonthlyStats(sliced);
           localStorage.setItem('ndv_monthly_stats', JSON.stringify(sliced));
         }
+        if (c.key === 'lastKeepAlive') {
+          setLastKeepAlive(c.value);
+          if (c.value) localStorage.setItem('ndv_last_keep_alive', c.value);
+        }
       });
     });
 
@@ -436,6 +440,12 @@ const App: React.FC = () => {
         });
         return next;
       });
+    });
+
+    socket.on('supabase_ping', (data: { timestamp: string }) => {
+      console.log('[REALTIME] Supabase ping received:', data.timestamp);
+      setLastKeepAlive(data.timestamp);
+      localStorage.setItem('ndv_last_keep_alive', data.timestamp);
     });
 
     return () => {
@@ -818,9 +828,9 @@ const App: React.FC = () => {
           setMonthlyStats(sliced);
           localStorage.setItem('ndv_monthly_stats', JSON.stringify(sliced));
         }
-        if (data.lastKeepAlive) {
+        if (data.lastKeepAlive !== undefined) {
           setLastKeepAlive(data.lastKeepAlive);
-          localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
+          if (data.lastKeepAlive) localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
         }
 
         if (user && data.users) {

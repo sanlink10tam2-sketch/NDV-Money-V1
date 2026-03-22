@@ -11,7 +11,7 @@ import http from "http";
 // Load environment variables from .env file
 dotenv.config();
 
-import { apiRouter, keepAliveSupabase } from "./api/index";
+import apiRouter, { keepAliveSupabase } from "./api/index";
 
 async function startServer() {
   const app = express();
@@ -103,12 +103,19 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
     
     // Initial Supabase ping on startup
-    keepAliveSupabase();
+    keepAliveSupabase().then(success => {
+      if (success) {
+        io.to("admin").emit("supabase_ping", { timestamp: new Date().toISOString() });
+      }
+    });
     
-    // Ping Supabase every 24 hours to prevent project pausing
-    setInterval(() => {
-      keepAliveSupabase();
-    }, 24 * 60 * 60 * 1000);
+    // Ping Supabase every 1 hour to prevent project pausing
+    setInterval(async () => {
+      const success = await keepAliveSupabase();
+      if (success) {
+        io.to("admin").emit("supabase_ping", { timestamp: new Date().toISOString() });
+      }
+    }, 1 * 60 * 60 * 1000);
   });
 
   // Global error handler - MUST be after all other routes

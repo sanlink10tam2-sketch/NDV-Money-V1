@@ -104,7 +104,7 @@ router.use((req, res, next) => {
 // Middleware to check Supabase configuration
 router.use((req, res, next) => {
   // Allow health checks without Supabase
-  if (req.path.includes('/api-health') || req.path.includes('/supabase-status') || req.path.includes('/keep-alive')) return next();
+  if (req.path.includes('/api-health') || req.path.includes('/supabase-status')) return next();
   
   const client = initSupabase();
 
@@ -199,16 +199,14 @@ export const keepAliveSupabase = async () => {
   if (!client) return;
   try {
     console.log("[Keep-Alive] Pinging Supabase to prevent project pausing...");
-    const now = new Date().toISOString();
+    // Perform a simple query to keep the project active
+    const { error } = await client.from('users').select('id').limit(1);
+    if (error) throw error;
     
-    // 1. Perform a simple query to keep the project active
-    const { error: selectError } = await client.from('users').select('id').limit(1);
-    if (selectError) throw selectError;
+    // Save the last success timestamp in the config table
+    await client.from('config').upsert({ key: 'lastKeepAlive', value: new Date().toISOString() }, { onConflict: 'key' });
     
-    // 2. Store the timestamp in the config table for monitoring
-    await client.from('config').upsert({ key: 'lastKeepAlive', value: now }, { onConflict: 'key' });
-    
-    console.log(`[Keep-Alive] Supabase ping successful at ${now}`);
+    console.log("[Keep-Alive] Supabase ping successful.");
     return true;
   } catch (e: any) {
     console.error("[Keep-Alive] Supabase ping failed:", e.message || e);
@@ -247,11 +245,14 @@ router.get("/supabase-status", async (req, res) => {
 
 // Keep-Alive endpoint for external services
 router.get("/keep-alive", async (req, res) => {
-  const userAgent = req.headers['user-agent'] || 'Unknown';
-  console.log(`[Keep-Alive] Received ping request from: ${userAgent}`);
   const success = await keepAliveSupabase();
   if (success) {
-    res.json({ status: "ok", message: "Supabase keep-alive successful", timestamp: new Date().toISOString() });
+    const timestamp = new Date().toISOString();
+    const io = req.app.get("io");
+    if (io) {
+      io.to("admin").emit("supabase_ping", { timestamp });
+    }
+    res.json({ status: "ok", message: "Supabase keep-alive successful", timestamp });
   } else {
     res.status(500).json({ status: "error", message: "Supabase keep-alive failed" });
   }
@@ -307,6 +308,20 @@ router.post("/login", async (req, res) => {
     console.error("Lỗi login:", e);
     res.status(500).json({ error: "Internal Server Error", message: e.message });
   }
+});
+
+let lastPingTime = 0;
+const PING_INTERVAL = 1 * 60 * 60 * 1000; // 1 hour
+
+// Passive Keep-Alive Middleware
+router.use(async (req, res, next) => {
+  const now = Date.now();
+  if (now - lastPingTime > PING_INTERVAL) {
+    lastPingTime = now;
+    // Don't await, let it run in background
+    keepAliveSupabase().catch(e => console.error("[Passive-Keep-Alive] Error:", e));
+  }
+  next();
 });
 
 router.get("/data", async (req, res) => {
