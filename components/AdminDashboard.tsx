@@ -158,6 +158,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {/* Manual Ping Button */}
+          <button 
+            onClick={async () => {
+              if (onRefresh) {
+                await fetch('/api/keep-alive');
+                onRefresh();
+              }
+            }}
+            className="w-9 h-9 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center text-orange-500 hover:bg-orange-500/20 transition-all active:scale-90"
+            title="Ping Supabase ngay"
+          >
+            <RefreshCcw size={16} />
+          </button>
+
           {/* Database Status */}
           <div className="relative group">
             <button 
