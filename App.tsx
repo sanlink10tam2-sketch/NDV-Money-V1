@@ -97,6 +97,9 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('ndv_monthly_stats');
     return saved ? JSON.parse(saved) : [];
   });
+  const [lastKeepAlive, setLastKeepAlive] = useState<string | null>(() => {
+    return localStorage.getItem('ndv_last_keep_alive');
+  });
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(() => {
@@ -810,6 +813,10 @@ const App: React.FC = () => {
           const sliced = data.monthlyStats.slice(0, 6);
           setMonthlyStats(sliced);
           localStorage.setItem('ndv_monthly_stats', JSON.stringify(sliced));
+        }
+        if (data.lastKeepAlive) {
+          setLastKeepAlive(data.lastKeepAlive);
+          localStorage.setItem('ndv_last_keep_alive', data.lastKeepAlive);
         }
 
         if (user && data.users) {
@@ -1692,7 +1699,7 @@ const App: React.FC = () => {
             onRefresh={() => fetchFullData(true)}
           />
         );
-      case AppView.ADMIN_DASHBOARD: return <AdminDashboard user={user} loans={loans} registeredUsersCount={registeredUsers.length} systemBudget={systemBudget} rankProfit={rankProfit} loanProfit={loanProfit} monthlyStats={monthlyStats} onResetRankProfit={handleResetRankProfit} onResetLoanProfit={handleResetLoanProfit} onNavigateToUsers={() => setCurrentView(AppView.ADMIN_USERS)} onLogout={handleLogout} onRefresh={() => fetchFullData(true)} />;
+      case AppView.ADMIN_DASHBOARD: return <AdminDashboard user={user} loans={loans} registeredUsersCount={registeredUsers.length} systemBudget={systemBudget} rankProfit={rankProfit} loanProfit={loanProfit} monthlyStats={monthlyStats} lastKeepAlive={lastKeepAlive} onResetRankProfit={handleResetRankProfit} onResetLoanProfit={handleResetLoanProfit} onNavigateToUsers={() => setCurrentView(AppView.ADMIN_USERS)} onLogout={handleLogout} onRefresh={() => fetchFullData(true)} />;
       case AppView.ADMIN_USERS: return <AdminUserManagement users={registeredUsers} loans={loans} isGlobalProcessing={isGlobalProcessing} onAction={handleAdminUserAction} onLoanAction={handleAdminLoanAction} onDeleteUser={handleDeleteUser} onAutoCleanup={handleAutoCleanupUsers} onFetchFullData={fetchFullData} onRefresh={() => fetchFullData(true)} onBack={() => setCurrentView(AppView.ADMIN_DASHBOARD)} />;
       case AppView.ADMIN_BUDGET: 
         return (

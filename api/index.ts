@@ -104,7 +104,7 @@ router.use((req, res, next) => {
 // Middleware to check Supabase configuration
 router.use((req, res, next) => {
   // Allow health checks without Supabase
-  if (req.path.includes('/api-health') || req.path.includes('/supabase-status')) return next();
+  if (req.path.includes('/api-health') || req.path.includes('/supabase-status') || req.path.includes('/keep-alive')) return next();
   
   const client = initSupabase();
 
@@ -199,10 +199,16 @@ export const keepAliveSupabase = async () => {
   if (!client) return;
   try {
     console.log("[Keep-Alive] Pinging Supabase to prevent project pausing...");
-    // Perform a simple query to keep the project active
-    const { error } = await client.from('users').select('id').limit(1);
-    if (error) throw error;
-    console.log("[Keep-Alive] Supabase ping successful.");
+    const now = new Date().toISOString();
+    
+    // 1. Perform a simple query to keep the project active
+    const { error: selectError } = await client.from('users').select('id').limit(1);
+    if (selectError) throw selectError;
+    
+    // 2. Store the timestamp in the config table for monitoring
+    await client.from('config').upsert({ key: 'lastKeepAlive', value: now }, { onConflict: 'key' });
+    
+    console.log(`[Keep-Alive] Supabase ping successful at ${now}`);
     return true;
   } catch (e: any) {
     console.error("[Keep-Alive] Supabase ping failed:", e.message || e);
@@ -410,6 +416,7 @@ router.get("/data", async (req, res) => {
     const rankProfit = Number(config?.find(c => c.key === 'rankProfit')?.value) || 0;
     const loanProfit = Number(config?.find(c => c.key === 'loanProfit')?.value) || 0;
     const monthlyStats = config?.find(c => c.key === 'monthlyStats')?.value || [];
+    const lastKeepAlive = config?.find(c => c.key === 'lastKeepAlive')?.value || null;
 
     const payload = {
       users,
@@ -418,7 +425,8 @@ router.get("/data", async (req, res) => {
       budget,
       rankProfit,
       loanProfit,
-      monthlyStats
+      monthlyStats,
+      lastKeepAlive
     };
 
     console.log(`[API] Data fetch successful. Users: ${users.length}, Loans: ${loans.length}`);

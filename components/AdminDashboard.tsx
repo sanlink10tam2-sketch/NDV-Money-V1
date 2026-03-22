@@ -30,6 +30,7 @@ interface AdminDashboardProps {
   rankProfit: number;
   loanProfit: number;
   monthlyStats: MonthlyStat[];
+  lastKeepAlive?: string | null;
   onResetRankProfit: () => void;
   onResetLoanProfit: () => void;
   onNavigateToUsers: () => void;
@@ -44,6 +45,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   systemBudget, 
   rankProfit, 
   loanProfit,
+  lastKeepAlive,
   onResetRankProfit, 
   onResetLoanProfit,
   onNavigateToUsers,
@@ -139,9 +141,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tighter uppercase leading-none">NDV Money Admin</h2>
-            <div className="flex items-center gap-1 mt-0.5">
-              <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-[7px] font-black text-gray-500 uppercase tracking-[0.2em]">Hệ thống trực tuyến</span>
+            <div className="flex flex-col mt-1">
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[7px] font-black text-gray-500 uppercase tracking-[0.2em]">Hệ thống trực tuyến</span>
+              </div>
+              {lastKeepAlive && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Clock size={8} className="text-orange-500" />
+                  <span className="text-[6px] font-bold text-gray-600 uppercase tracking-wider">
+                    Keep-Alive: {new Date(lastKeepAlive).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit' })}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
